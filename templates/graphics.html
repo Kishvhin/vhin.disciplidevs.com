@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphics Gallery - NDTA News Pipeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #003366 0%, #0055aa 100%);
+            color: white;
+            padding: 2rem;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .header a { color: white; text-decoration: none; opacity: 0.9; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+        
+        .graphic-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .graphic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .graphic-image {
+            width: 100%;
+            display: block;
+            cursor: pointer;
+        }
+        
+        .graphic-info {
+            padding: 1.5rem;
+        }
+        
+        .graphic-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 0.5rem;
+        }
+        
+        .graphic-meta {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #003366;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0055aa;
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .lightbox.active {
+            display: flex;
+        }
+        
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        
+        .stats {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #003366;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🎨 Graphics Gallery</h1>
+            <p><a href="/">← Back to Dashboard</a> | <a href="/workflow">View Workflow</a></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">{{ graphics|length }}</div>
+                <div class="stat-label">Total Graphics</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1200×630</div>
+                <div class="stat-label">Dimensions (px)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">NDTA</div>
+                <div class="stat-label">Branded</div>
+            </div>
+        </div>
+
+        {% if graphics %}
+        <div class="gallery">
+            {% for graphic in graphics %}
+            <div class="graphic-card">
+                <img src="/static/graphics/{{ graphic.filename }}" 
+                     alt="{{ graphic.title }}" 
+                     class="graphic-image"
+                     onclick="openLightbox('/static/graphics/{{ graphic.filename }}')">
+                <div class="graphic-info">
+                    <div class="graphic-title">{{ graphic.title }}</div>
+                    <div class="graphic-meta">
+                        <strong>File:</strong> {{ graphic.filename }}<br>
+                        {% if graphic.created_at %}
+                        <strong>Created:</strong> {{ graphic.created_at[:19] }}
+                        {% endif %}
+                    </div>
+                    <a href="/static/graphics/{{ graphic.filename }}" download class="btn">⬇️ Download</a>
+                    <a href="/static/graphics/{{ graphic.filename }}" target="_blank" class="btn">🔍 View Full</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="background: white; padding: 3rem; text-align: center; border-radius: 10px;">
+            <p style="font-size: 1.2rem; color: #666;">No graphics created yet.</p>
+            <p style="margin-top: 1rem;">Run <code>python main.py graphics</code> to create graphics.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img id="lightbox-image" src="" alt="">
+    </div>
+
+    <script>
+        function openLightbox(src) {
+            document.getElementById('lightbox-image').src = src;
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
+

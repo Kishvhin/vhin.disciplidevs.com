@@ -1,0 +1,394 @@
+# NDTA News Pipeline - News Sources Configuration
+# This file controls what news the system looks for
+
+# ============================================
+# DUMP TRUCK INDUSTRY KEYWORDS
+# ============================================
+# These keywords determine what news is relevant
+# Add/remove based on what you want to track
+
+primary_keywords:
+  # Core dump truck terms
+  - "dump truck"
+  - "dump trucks"
+  - "dump trailer"
+  - "dump trailers"
+  - "tipper truck"
+  - "tipper trucks"
+  
+  # Industry specific
+  - "vocational truck"
+  - "heavy duty truck"
+  - "commercial truck"
+  - "construction truck"
+  - "aggregate hauling"
+  - "material hauling"
+
+secondary_keywords:
+  # Regulations & Compliance
+  - "truck regulation"
+  - "DOT regulation"
+  - "FMCSA"
+  - "truck safety"
+  - "emissions standards"
+  - "weight limits"
+  
+  # Business & Economics
+  - "trucking industry"
+  - "hauling rates"
+  - "freight rates"
+  - "fuel prices diesel"
+  - "truck sales"
+  - "truck manufacturing"
+  
+  # Technology
+  - "truck technology"
+  - "fleet management"
+  - "telematics"
+  - "electric truck"
+  - "autonomous truck"
+  
+  # Market & Industry
+  - "construction industry"
+  - "aggregate industry"
+  - "mining industry"
+  - "concrete industry"
+  - "asphalt industry"
+
+# ============================================
+# RELEVANCE RULES
+# ============================================
+# Stories must meet these criteria to be considered
+
+relevance_rules:
+  # Must contain at least ONE primary keyword
+  require_primary_keyword: true
+  
+  # Minimum relevance score (1-10)
+  minimum_score: 6
+  
+  # Exclude these topics (even if keywords match)
+  excluded_topics:
+    - "video games"
+    - "sports"
+    - "entertainment"
+    - "recipes"
+    - "celebrity"
+  
+  # Boost score for these topics
+  boost_topics:
+    - "legislation"
+    - "regulation"
+    - "safety"
+    - "industry report"
+    - "market analysis"
+    - "technology innovation"
+
+# ============================================
+# NEWS SOURCES
+# ============================================
+
+news_apis:
+  # NewsAPI (newsapi.org)
+  newsapi:
+    enabled: true
+    sources:
+      - "business-insider"
+      - "bloomberg"
+      - "reuters"
+      - "the-wall-street-journal"
+    categories:
+      - "business"
+      - "technology"
+    language: "en"
+    country: "us"
+
+# RSS Feeds (trucking industry publications)
+rss_feeds:
+  - name: "Transport Topics"
+    url: "https://www.ttnews.com/rss/trucking"
+    category: "industry_news"
+  
+  - name: "Fleet Owner"
+    url: "https://www.fleetowner.com/rss"
+    category: "industry_news"
+  
+  - name: "Commercial Carrier Journal"
+    url: "https://www.ccjdigital.com/feed/"
+    category: "industry_news"
+  
+  - name: "Trucks.com"
+    url: "https://www.trucks.com/feed/"
+    category: "industry_news"
+  
+  - name: "Heavy Duty Trucking"
+    url: "https://www.truckinginfo.com/rss"
+    category: "industry_news"
+  
+  - name: "Land Line Magazine"
+    url: "https://landline.media/feed/"
+    category: "owner_operator"
+  
+  - name: "Construction Equipment Guide"
+    url: "https://www.constructionequipmentguide.com/rss"
+    category: "construction"
+  
+  - name: "Equipment World"
+    url: "https://www.equipmentworld.com/feed/"
+    category: "construction"
+
+# Industry Websites to Monitor
+industry_websites:
+  - name: "American Trucking Associations"
+    url: "https://www.trucking.org/news-insights"
+    check_frequency: "daily"
+  
+  - name: "National Private Truck Council"
+    url: "https://www.nptc.org/newsroom"
+    check_frequency: "daily"
+  
+  - name: "Owner-Operator Independent Drivers Association"
+    url: "https://www.ooida.com/news/"
+    check_frequency: "daily"
+
+# ============================================
+# STATE DETECTION
+# ============================================
+
+state_detection:
+  enabled: true
+  
+  # Patterns to detect state-specific news
+  state_indicators:
+    - "state of {STATE}"
+    - "{STATE} state"
+    - "{STATE} legislature"
+    - "{STATE} governor"
+    - "{STATE} DOT"
+    - "in {STATE}"
+    - "{STATE} trucking"
+  
+  # Alert threshold (confidence 0-1)
+  confidence_threshold: 0.7
+  
+  # States to monitor (all 50, abbreviations)
+  monitored_states:
+    - "AL" - "AK" - "AZ" - "AR" - "CA" - "CO" - "CT" - "DE" - "FL" - "GA"
+    - "HI" - "ID" - "IL" - "IN" - "IA" - "KS" - "KY" - "LA" - "ME" - "MD"
+    - "MA" - "MI" - "MN" - "MS" - "MO" - "MT" - "NE" - "NV" - "NH" - "NJ"
+    - "NM" - "NY" - "NC" - "ND" - "OH" - "OK" - "OR" - "PA" - "RI" - "SC"
+    - "SD" - "TN" - "TX" - "UT" - "VT" - "VA" - "WA" - "WV" - "WI" - "WY"
+
+# ============================================
+# SCRAPING SETTINGS
+# ============================================
+
+scraping:
+  # How far back to look for news
+  lookback_days: 7
+  
+  # Maximum articles per run
+  max_articles: 100
+  
+  # Rate limiting
+  delay_between_requests: 2  # seconds
+  
+  # Timeout settings
+  request_timeout: 30  # seconds
+  
+  # Save raw articles
+  save_raw: true
+  
+  # Schedule
+  schedule:
+    frequency: "daily"
+    time: "06:00"  # 6 AM
+    timezone: "America/New_York"
+
+# ============================================
+# CONTENT FILTERING
+# ============================================
+
+content_filters:
+  # Minimum article length
+  min_words: 100
+  
+  # Maximum age
+  max_age_days: 30
+  
+  # Required fields
+  required_fields:
+    - "title"
+    - "description"
+    - "url"
+    - "published_date"
+  
+  # Duplicate detection
+  duplicate_check: true
+  similarity_threshold: 0.85
+
+# ============================================
+# ALERT SETTINGS
+# ============================================
+
+alerts:
+  # Email notifications
+  email_enabled: true
+  
+  # When to send alerts
+  send_on:
+    - "high_relevance"  # Score 9-10
+    - "state_specific"  # State detected
+    - "urgent_keyword"  # Contains urgent terms
+  
+  # Urgent keywords that trigger immediate alert
+  urgent_keywords:
+    - "recall"
+    - "ban"
+    - "lawsuit"
+    - "shutdown"
+    - "emergency"
+    - "crisis"
+    - "breaking"
+
+# ============================================
+# AI GENERATION SETTINGS
+# ============================================
+
+ai_settings:
+  # Model to use
+  model: "gpt-4"  # Options: gpt-4, gpt-3.5-turbo
+  
+  # Temperature (creativity)
+  temperature: 0.7
+  
+  # Maximum tokens
+  max_tokens: 1000
+  
+  # NDTA voice/tone
+  tone: "professional yet accessible"
+  audience: "dump truck business owners and operators"
+  perspective: "NDTA industry advocate"
+  
+  # Report structure
+  report_structure:
+    - "compelling_headline"
+    - "executive_summary"
+    - "key_facts"
+    - "industry_impact"
+    - "ndta_perspective"
+    - "action_items"
+    - "call_to_action"
+
+# ============================================
+# GRAPHICS SETTINGS
+# ============================================
+
+graphics:
+  # Image dimensions
+  width: 1200
+  height: 630
+  
+  # Format
+  format: "PNG"
+  quality: 95
+  
+  # Branding
+  include_logo: true
+  logo_position: "top-right"
+  
+  # Templates
+  templates:
+    - "modern_news"
+    - "breaking_alert"
+    - "state_specific"
+    - "industry_update"
+  
+  # Colors (NDTA brand colors - update these!)
+  brand_colors:
+    primary: "#003366"    # Dark blue
+    secondary: "#FF6600"  # Orange
+    accent: "#FFFFFF"     # White
+    text: "#333333"       # Dark gray
+  
+  # Fonts
+  fonts:
+    headline: "Arial Bold"
+    body: "Arial"
+    caption: "Arial"
+
+# ============================================
+# DISTRIBUTION SETTINGS
+# ============================================
+
+distribution:
+  # Platforms to post to
+  platforms:
+    twitter:
+      enabled: true
+      max_length: 280
+      include_image: true
+      hashtags: ["#DumpTruck", "#Trucking", "#NDTA"]
+    
+    facebook:
+      enabled: true
+      main_page: true
+      state_groups: true
+      include_image: true
+    
+    linkedin:
+      enabled: false
+      company_page: true
+  
+  # Posting schedule
+  posting:
+    optimal_times:
+      - "08:00"  # 8 AM
+      - "12:00"  # Noon
+      - "17:00"  # 5 PM
+    timezone: "America/New_York"
+    
+    # Space out posts
+    minimum_gap_hours: 2
+  
+  # Approval workflow
+  approval:
+    required: true
+    approvers:
+      - "primary_admin"
+      - "dee_jay"
+    require_both: false  # Either can approve
+    timeout_hours: 24
+
+# ============================================
+# LOGGING & MONITORING
+# ============================================
+
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Log files
+  files:
+    scraper: "logs/scraper.log"
+    generator: "logs/generator.log"
+    distribution: "logs/distribution.log"
+    errors: "logs/errors.log"
+  
+  # Rotation
+  rotate: true
+  max_size_mb: 10
+  backup_count: 5
+
+monitoring:
+  # Track these metrics
+  metrics:
+    - "articles_scraped"
+    - "articles_processed"
+    - "relevance_scores"
+    - "state_detections"
+    - "posts_published"
+    - "engagement_rate"
+  
+  # Report frequency
+  report_frequency: "weekly"
+  report_day: "Monday"

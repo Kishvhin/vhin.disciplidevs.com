@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - NDTA News Pipeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #003366 0%, #0055aa 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .header a { color: white; text-decoration: none; opacity: 0.9; }
+        .header a:hover { opacity: 1; text-decoration: underline; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .article-card {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #003366;
+        }
+        .article-card.pending { border-left-color: #ff6600; }
+        .article-card.approved { border-left-color: #00aa00; }
+        .article-card.rejected { border-left-color: #cc0000; opacity: 0.6; }
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        .article-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 0.5rem;
+        }
+        .article-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .article-summary {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        .badge-pending { background: #fff3e0; color: #ff6600; }
+        .badge-approved { background: #e8f5e9; color: #00aa00; }
+        .badge-rejected { background: #ffebee; color: #cc0000; }
+        .badge-state { background: #e3f2fd; color: #1976d2; }
+        .badge-score {
+            background: #f5f5f5;
+            color: #333;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            transition: all 0.2s;
+        }
+        .btn-approve {
+            background: #00aa00;
+            color: white;
+        }
+        .btn-approve:hover {
+            background: #008800;
+        }
+        .btn-reject {
+            background: #cc0000;
+            color: white;
+        }
+        .btn-reject:hover {
+            background: #aa0000;
+        }
+        .btn-view {
+            background: #003366;
+            color: white;
+        }
+        .btn-view:hover {
+            background: #0055aa;
+        }
+        .filter-bar {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .filter-bar select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .stats-bar {
+            background: linear-gradient(135deg, #003366 0%, #0055aa 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-item .number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .stat-item .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>📰 Scraped Articles</h1>
+            <p><a href="/">← Back to Dashboard</a></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filter-bar">
+            <label>Filter: </label>
+            <select id="statusFilter" onchange="filterArticles()">
+                <option value="all">All Articles</option>
+                <option value="pending_review">Pending Review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+
+        {% if articles %}
+            {% for article in articles %}
+            <div class="article-card {{ article.status }}" data-status="{{ article.status }}">
+                <div class="article-header">
+                    <div style="flex: 1;">
+                        <div class="article-title">{{ article.title }}</div>
+                        <div class="article-meta">
+                            <strong>Source:</strong> {{ article.source }} | 
+                            <strong>Date:</strong> {{ article.published_date[:10] }} |
+                            <strong>URL:</strong> <a href="{{ article.url }}" target="_blank">View Original</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    {% if article.status == 'pending_review' %}
+                        <span class="badge badge-pending">⏳ Pending Review</span>
+                    {% elif article.status == 'approved' or article.status == 'auto_approved' %}
+                        <span class="badge badge-approved">✅ Approved</span>
+                    {% elif article.status == 'rejected' %}
+                        <span class="badge badge-rejected">❌ Rejected</span>
+                    {% endif %}
+
+                    {% if article.relevance_score %}
+                        <span class="badge badge-score">Relevance: {{ article.relevance_score }}/10</span>
+                    {% endif %}
+
+                    {% if article.verification and article.verification.overall_score %}
+                        <span class="badge badge-score">Verification: {{ article.verification.overall_score }}/10</span>
+                    {% endif %}
+
+                    {% if article.is_state_specific %}
+                        <span class="badge badge-state">📍 {{ article.detected_states|join(', ') }}</span>
+                    {% endif %}
+                </div>
+
+                {% if article.verification %}
+                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #00aa00;">
+                    <div style="font-weight: bold; margin-bottom: 0.5rem; color: #003366;">
+                        🔒 Verification Report
+                    </div>
+                    <div style="font-size: 0.9rem; line-height: 1.6;">
+                        <strong>Overall Score:</strong> {{ article.verification.overall_score }}/10<br>
+                        <strong>Source:</strong> {{ article.verification.source_verification.source_name }}
+                        {% if article.verification.source_verification.is_trusted %}
+                            <span style="color: #00aa00;">✓ Trusted ({{ article.verification.source_verification.trust_score }}/10)</span>
+                        {% else %}
+                            <span style="color: #ff6600;">⚠ Unverified Source</span>
+                        {% endif %}<br>
+                        <strong>Quality Score:</strong> {{ article.verification.quality_check.quality_score }}/10<br>
+                        {% if article.verification.quality_check.age_days %}
+                            <strong>Article Age:</strong> {{ article.verification.quality_check.age_days }} days<br>
+                        {% endif %}
+                        <strong>Credibility:</strong> {{ article.verification.fact_check.credibility_score }}/10<br>
+                        <strong>Misinformation Risk:</strong> {{ article.verification.fact_check.misinformation_risk|upper }}<br>
+                        <strong>Recommendation:</strong> <span style="font-weight: bold; color: {% if article.verification.recommendation == 'auto_approve' %}#00aa00{% elif article.verification.recommendation == 'manual_review' %}#ff6600{% else %}#cc0000{% endif %};">{{ article.verification.recommendation|upper|replace('_', ' ') }}</span>
+                        {% if article.verification.fact_check.concerns %}
+                            <br><strong>Concerns:</strong> {{ article.verification.fact_check.concerns|join(', ') }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="article-summary">
+                    {{ article.summary[:300] }}{% if article.summary|length > 300 %}...{% endif %}
+                </div>
+
+                {% if article.relevance_reason %}
+                <div style="background: #f8f8f8; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem;">
+                    <strong>AI Relevance Analysis:</strong> {{ article.relevance_reason }}
+                </div>
+                {% endif %}
+
+                <div>
+                    {% if article.status == 'pending_review' %}
+                        <button class="btn btn-approve" onclick="approveArticle('{{ article.id }}')">✅ Approve</button>
+                        <button class="btn btn-reject" onclick="rejectArticle('{{ article.id }}')">❌ Reject</button>
+                    {% endif %}
+                    <a href="{{ article.url }}" target="_blank" class="btn btn-view">🔗 View Original</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="article-card">
+                <p>No articles found. Run <code>python main.py scrape</code> to find news.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function approveArticle(id) {
+            if (!confirm('Approve this article for processing?')) return;
+            
+            fetch(`/api/approve/${id}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Article approved!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Error: ' + err));
+        }
+
+        function rejectArticle(id) {
+            if (!confirm('Reject this article?')) return;
+            
+            fetch(`/api/reject/${id}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Article rejected!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Error: ' + err));
+        }
+
+        function filterArticles() {
+            const filter = document.getElementById('statusFilter').value;
+            const cards = document.querySelectorAll('.article-card');
+            
+            cards.forEach(card => {
+                if (filter === 'all' || card.dataset.status === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

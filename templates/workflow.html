@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow - NDTA News Pipeline</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #003366 0%, #0055aa 100%);
+            color: white;
+            padding: 2rem;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .header a { color: white; text-decoration: none; opacity: 0.9; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
+        .workflow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .workflow-stage {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-top: 4px solid #003366;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .workflow-stage:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        
+        .workflow-stage.active {
+            border-top-color: #ff6600;
+            background: linear-gradient(to bottom, #fff8f0 0%, white 100%);
+        }
+        
+        .stage-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stage-icon {
+            font-size: 3rem;
+            margin-right: 1rem;
+        }
+        
+        .stage-info h2 {
+            font-size: 1.3rem;
+            color: #003366;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stage-count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stage-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .stage-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .item-preview {
+            background: #f8f8f8;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border-left: 3px solid #003366;
+            font-size: 0.9rem;
+        }
+        
+        .item-preview:hover {
+            background: #f0f0f0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #003366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #0055aa;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #ff6600;
+        }
+        
+        .btn-secondary:hover {
+            background: #ff8833;
+        }
+        
+        .graphic-preview {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #003366 0%, #0055aa 100%);
+            height: 100%;
+            transition: width 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🔄 Pipeline Workflow</h1>
+            <p><a href="/">← Back to Dashboard</a></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="workflow-container">
+            <!-- Stage 1: Scrape -->
+            <div class="workflow-stage" id="stage-scrape">
+                <div class="stage-header">
+                    <div class="stage-icon">📥</div>
+                    <div class="stage-info">
+                        <h2>1. Scrape News</h2>
+                    </div>
+                </div>
+                <div class="stage-count" id="count-scraped">-</div>
+                <div class="stage-description">
+                    Articles scraped from ENR and Construction Dive, filtered by AI for dump truck industry relevance.
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-scrape" style="width: 0%"></div>
+                </div>
+                <button class="btn btn-secondary" onclick="runCommand('scrape')">🔍 Run Scrape</button>
+                <a href="/articles" class="btn">View Articles</a>
+            </div>
+
+            <!-- Stage 2: Review -->
+            <div class="workflow-stage" id="stage-review">
+                <div class="stage-header">
+                    <div class="stage-icon">👀</div>
+                    <div class="stage-info">
+                        <h2>2. Review Articles</h2>
+                    </div>
+                </div>
+                <div class="stage-count" id="count-review">-</div>
+                <div class="stage-description">
+                    Articles pending manual review and approval for NDTA report generation.
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-review" style="width: 0%"></div>
+                </div>
+                <a href="/articles" class="btn">Review Now</a>
+            </div>
+
+            <!-- Stage 3: Generate -->
+            <div class="workflow-stage" id="stage-generate">
+                <div class="stage-header">
+                    <div class="stage-icon">✨</div>
+                    <div class="stage-info">
+                        <h2>3. Generate Reports</h2>
+                    </div>
+                </div>
+                <div class="stage-count" id="count-generated">-</div>
+                <div class="stage-description">
+                    AI-powered NDTA-branded reports created from approved articles.
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-generate" style="width: 0%"></div>
+                </div>
+                <button class="btn btn-secondary" onclick="runCommand('generate')">✨ Generate Reports</button>
+                <a href="/reports" class="btn">View Reports</a>
+            </div>
+
+            <!-- Stage 4: Graphics -->
+            <div class="workflow-stage" id="stage-graphics">
+                <div class="stage-header">
+                    <div class="stage-icon">🎨</div>
+                    <div class="stage-info">
+                        <h2>4. Create Graphics</h2>
+                    </div>
+                </div>
+                <div class="stage-count" id="count-graphics">-</div>
+                <div class="stage-description">
+                    Professional social media graphics (1200x630px) with NDTA branding.
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-graphics" style="width: 0%"></div>
+                </div>
+                <div id="graphics-preview"></div>
+                <button class="btn btn-secondary" onclick="runCommand('graphics')">🎨 Create Graphics</button>
+                <a href="/graphics" class="btn">View All Graphics</a>
+            </div>
+
+            <!-- Stage 5: Approve -->
+            <div class="workflow-stage" id="stage-approve">
+                <div class="stage-header">
+                    <div class="stage-icon">✅</div>
+                    <div class="stage-info">
+                        <h2>5. Final Approval</h2>
+                    </div>
+                </div>
+                <div class="stage-count" id="count-approve">-</div>
+                <div class="stage-description">
+                    Content reviewed and approved for posting to social media.
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-approve" style="width: 0%"></div>
+                </div>
+                <a href="/approved" class="btn">View Approved</a>
+            </div>
+
+            <!-- Stage 6: Post -->
+            <div class="workflow-stage" id="stage-post">
+                <div class="stage-header">
+                    <div class="stage-icon">🚀</div>
+                    <div class="stage-info">
+                        <h2>6. Post to Social</h2>
+                    </div>
+                </div>
+                <div class="stage-count" id="count-posted">-</div>
+                <div class="stage-description">
+                    Content published to Twitter and Facebook with graphics.
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-post" style="width: 0%"></div>
+                </div>
+                <button class="btn btn-secondary" onclick="if(confirm('Post to social media?')) runCommand('post')">🚀 Post Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function runCommand(cmd) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Running...';
+            
+            fetch(`/api/run/${cmd}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`${cmd} completed successfully!`);
+                        location.reload();
+                    } else {
+                        alert(`Error: ${data.error || data.output}`);
+                        btn.disabled = false;
+                        btn.textContent = `Run ${cmd}`;
+                    }
+                })
+                .catch(err => {
+                    alert(`Error: ${err}`);
+                    btn.disabled = false;
+                    btn.textContent = `Run ${cmd}`;
+                });
+        }
+
+        function updateWorkflow() {
+            fetch('/api/workflow')
+                .then(r => r.json())
+                .then(data => {
+                    // Update counts
+                    document.getElementById('count-scraped').textContent = data.total_articles + ' articles';
+                    document.getElementById('count-review').textContent = data.unreviewed + ' pending';
+                    document.getElementById('count-generated').textContent = data.total_reports + ' reports';
+                    document.getElementById('count-graphics').textContent = data.graphics_count + ' graphics';
+                    document.getElementById('count-approve').textContent = data.pending_approval + ' pending';
+                    document.getElementById('count-posted').textContent = data.ready_to_post + ' ready';
+                    
+                    // Update progress bars
+                    const total = Math.max(data.total_articles, 1);
+                    document.getElementById('progress-scrape').style.width = '100%';
+                    document.getElementById('progress-review').style.width = ((data.total_articles - data.unreviewed) / total * 100) + '%';
+                    document.getElementById('progress-generate').style.width = (data.total_reports / total * 100) + '%';
+                    document.getElementById('progress-graphics').style.width = (data.graphics_count / total * 100) + '%';
+                    document.getElementById('progress-approve').style.width = (data.total_approved / total * 100) + '%';
+                    document.getElementById('progress-post').style.width = '0%';
+                    
+                    // Highlight active stages
+                    document.querySelectorAll('.workflow-stage').forEach(s => s.classList.remove('active'));
+                    if (data.unreviewed > 0) {
+                        document.getElementById('stage-review').classList.add('active');
+                    } else if (data.approved_for_processing > 0) {
+                        document.getElementById('stage-generate').classList.add('active');
+                    } else if (data.needing_graphics > 0) {
+                        document.getElementById('stage-graphics').classList.add('active');
+                    } else if (data.pending_approval > 0) {
+                        document.getElementById('stage-approve').classList.add('active');
+                    } else if (data.ready_to_post > 0) {
+                        document.getElementById('stage-post').classList.add('active');
+                    }
+                    
+                    // Show sample graphics
+                    if (data.sample_graphics && data.sample_graphics.length > 0) {
+                        const preview = document.getElementById('graphics-preview');
+                        preview.innerHTML = `<img src="/static/graphics/${data.sample_graphics[0]}" class="graphic-preview" alt="Sample graphic">`;
+                    }
+                });
+        }
+
+        // Update on load and every 10 seconds
+        updateWorkflow();
+        setInterval(updateWorkflow, 10000);
+    </script>
+</body>
+</html>
+

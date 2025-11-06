@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NDTA News Pipeline - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #003366 0%, #0055aa 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #003366;
+        }
+        .stat-card.warning {
+            border-left-color: #ff6600;
+        }
+        .stat-card.success {
+            border-left-color: #00aa00;
+        }
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #003366;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0055aa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,51,102,0.3);
+        }
+        .btn-secondary {
+            background: #ff6600;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #ff8833;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,102,0,0.3);
+        }
+        .btn-success {
+            background: #00aa00;
+            color: white;
+            font-size: 1.1rem;
+        }
+        .btn-success:hover {
+            background: #00cc00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,170,0,0.3);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        .section h2 {
+            color: #003366;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .workflow-step {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            padding: 1rem;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+        .workflow-step.active {
+            background: #e6f2ff;
+            border: 2px solid #003366;
+        }
+        .workflow-arrow {
+            font-size: 1.5rem;
+            color: #999;
+        }
+        @media (max-width: 768px) {
+            .workflow-arrow { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🚛 NDTA News Pipeline</h1>
+            <p>Automated News Monitoring & Distribution System</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Status Cards -->
+        <div class="stats-grid">
+            <div class="stat-card warning">
+                <div class="stat-number">{{ status.unreviewed }}</div>
+                <div class="stat-label">Unreviewed Articles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ status.approved_for_processing }}</div>
+                <div class="stat-label">Approved for Processing</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ status.pending_approval }}</div>
+                <div class="stat-label">Pending Final Approval</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-number">{{ status.ready_to_post }}</div>
+                <div class="stat-label">Ready to Post</div>
+            </div>
+        </div>
+
+        <!-- Automated Workflow -->
+        <div class="section">
+            <h2>🤖 Automated Workflow</h2>
+            <p style="margin-bottom: 1rem; color: #666;">
+                Run the complete automated pipeline: Scrape → Auto-Approve Verified → Generate → Graphics → Post
+            </p>
+            <button onclick="runAutomatedWorkflow()" id="autoBtn" class="btn btn-success" style="width: 100%; padding: 1.5rem;">
+                🚀 Run Full Automated Workflow
+            </button>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section">
+            <h2>Manual Controls</h2>
+            <div class="actions">
+                <a href="/workflow" class="btn btn-primary">🔄 View Workflow</a>
+                <a href="/articles" class="btn btn-primary">📰 View Articles</a>
+                <a href="/reports" class="btn btn-primary">📝 View Reports</a>
+                <a href="/graphics" class="btn btn-primary">🎨 View Graphics</a>
+                <a href="/approved" class="btn btn-primary">✅ View Approved</a>
+                <button onclick="runCommand('scrape')" class="btn btn-secondary">🔍 Run Scrape</button>
+                <button onclick="runCommand('generate')" class="btn btn-secondary">✨ Generate Reports</button>
+                <button onclick="runCommand('graphics')" class="btn btn-secondary">🎨 Create Graphics</button>
+            </div>
+        </div>
+
+        <!-- Workflow Status -->
+        <div class="section">
+            <h2>Pipeline Workflow</h2>
+            <div class="workflow">
+                <div class="workflow-step {% if status.unreviewed > 0 %}active{% endif %}">
+                    <div style="font-size: 2rem;">📥</div>
+                    <div><strong>Scrape</strong></div>
+                    <div style="font-size: 0.9rem; color: #666;">{{ status.total_articles }} articles</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step {% if status.approved_for_processing > 0 %}active{% endif %}">
+                    <div style="font-size: 2rem;">👀</div>
+                    <div><strong>Review</strong></div>
+                    <div style="font-size: 0.9rem; color: #666;">{{ status.approved_for_processing }} approved</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div style="font-size: 2rem;">✨</div>
+                    <div><strong>Generate</strong></div>
+                    <div style="font-size: 0.9rem; color: #666;">{{ status.total_reports }} reports</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div style="font-size: 2rem;">🎨</div>
+                    <div><strong>Graphics</strong></div>
+                    <div style="font-size: 0.9rem; color: #666;">Auto-created</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step {% if status.ready_to_post > 0 %}active{% endif %}">
+                    <div style="font-size: 2rem;">🚀</div>
+                    <div><strong>Post</strong></div>
+                    <div style="font-size: 0.9rem; color: #666;">{{ status.ready_to_post }} ready</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="section">
+            <h2>Next Steps</h2>
+            {% if status.unreviewed > 0 %}
+                <p>✅ You have <strong>{{ status.unreviewed }} articles</strong> waiting for review. <a href="/articles">Review them now →</a></p>
+            {% elif status.approved_for_processing > 0 %}
+                <p>✅ You have <strong>{{ status.approved_for_processing }} approved articles</strong>. Run <code>python main.py generate</code> to create reports.</p>
+            {% elif status.pending_approval > 0 %}
+                <p>✅ You have <strong>{{ status.pending_approval }} reports</strong> pending final approval.</p>
+            {% elif status.ready_to_post > 0 %}
+                <p>🚀 You have <strong>{{ status.ready_to_post }} posts</strong> ready to publish!</p>
+            {% else %}
+                <p>✨ All caught up! Run a new scrape to find more news.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function runAutomatedWorkflow() {
+            if (!confirm('Run the full automated workflow? This will:\n\n1. Scrape news from all sources\n2. Auto-approve verified articles (score ≥8)\n3. Generate NDTA reports\n4. Create graphics\n5. Post to social media\n\nThis may take several minutes.')) {
+                return;
+            }
+
+            const btn = document.getElementById('autoBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Running automated workflow...';
+
+            showAlert('🚀 Starting automated workflow...', 'info');
+
+            fetch('/api/run/auto', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '🚀 Run Full Automated Workflow';
+
+                    if (data.success) {
+                        showAlert(`✅ Workflow completed! ${data.summary}`, 'success');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showAlert(`❌ Error: ${data.error}`, 'error');
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = '🚀 Run Full Automated Workflow';
+                    showAlert(`❌ Error: ${err}`, 'error');
+                });
+        }
+
+        function runCommand(cmd) {
+            if (!confirm(`Run ${cmd}? This may take a few minutes.`)) return;
+
+            const btn = event.target;
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.innerHTML = '<span class="loading"></span> Running...';
+
+            fetch(`/api/run/${cmd}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+
+                    if (data.success) {
+                        showAlert(`✅ ${cmd} completed successfully!`, 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(`❌ Error: ${data.error || data.output}`, 'error');
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    showAlert(`❌ Error: ${err}`, 'error');
+                });
+        }
+
+        // Auto-refresh status every 30 seconds
+        setInterval(() => {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    // Update numbers without full page reload
+                    document.querySelectorAll('.stat-number')[0].textContent = data.unreviewed;
+                    document.querySelectorAll('.stat-number')[1].textContent = data.approved_for_processing;
+                    document.querySelectorAll('.stat-number')[2].textContent = data.pending_approval;
+                    document.querySelectorAll('.stat-number')[3].textContent = data.ready_to_post;
+                });
+        }, 30000);
+    </script>
+</body>
+</html>
+
